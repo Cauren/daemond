@@ -72,13 +72,6 @@ Module/[^a-z]		{ return Module; }
 All/[^a-z]		{ return All; }
 Any/[^a-z]		{ return Any; }
 Group/[^a-z]		{ return Group; }
-Optionnal/[^a-z]	{ return Optionnal; }
-Parameter/[^a-z]	{ return Parameter; }
-Type/[^a-z]		{ return Type; }
-String/[^a-z]		{ return String; }
-Numeric/[^a-z]		{ return Numeric; }
-Boolean/[^a-z]		{ return Boolean; }
-IP/[^a-z]		{ return IP; }
 Default/[^a-z]		{ return Default; }
 Description/[^a-z]	{ return Description; }
 Caption/[^a-z]		{ return Caption; }
