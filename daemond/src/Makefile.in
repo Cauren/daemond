@@ -20,7 +20,7 @@ STATUS_OBJ=$(addsuffix .@OBJEXT@, $(STATUS_PARTS))
 DEPDIR := .deps
 DEPFILES = $(wildcard $(patsubst %,%/*.d,$(DEPDIR)))
 
-all:		$(DAEMOND_EXE) $(STATUS_OBJ)
+all:		keywords.h $(DAEMOND_EXE) $(STATUS_OBJ)
 
 %.o		: %.cc
 		@$(MKDIR) $(*D)/$(DEPDIR)
@@ -38,8 +38,6 @@ rclex.l		: rcgr.hh
 
 keywords.h	: rcgr.hh
 		sed -ne '/^# define\t\([A-Z][A-Za-z]*\)\t\([0-9][0-9]*\).*/{s//\1=\2,/ p}' rcgr.hh >keywords.h
-
-keywords.H	: keywords.h
 
 $(DAEMOND_EXE):	$(DAEMOND_OBJ)
 		$(LINK) -g -o $(DAEMOND_EXE) $^ @LIBS@
