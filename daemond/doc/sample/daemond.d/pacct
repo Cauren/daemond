@@ -1,0 +1,14 @@
+
+service "pacct" {
+    description "Process accounting";
+
+    need "/sbin/accton";
+    require "boot-clean";
+
+    setup "/bin/touch /var/log/pacct";
+    setup "/sbin/accton /var/log/pacct";
+    setup "/bin/chmod 640 /var/log/pacct";
+
+    cleanup "/sbin/accton";
+}
+

@@ -1,0 +1,12 @@
+
+
+service "apache" {
+    description "The Apache web server";
+    require "network";
+    need "/usr/sbin/httpd";
+    need "/etc/apache/httpd.conf";
+    start daemon "/usr/sbin/apachectl start"
+	pidfile "/var/run/httpd.pid";
+    stop "/usr/sbin/apachectl stop";
+}
+

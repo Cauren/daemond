@@ -1,0 +1,18 @@
+
+
+service "syslogd" {
+    description "System logging";
+    require "mount-local";
+    want "klogd";
+    start "/usr/sbin/syslogd -n";
+    stop kill;
+}
+
+service "klogd" {
+    description "Kernel logging";
+    require "syslogd";
+    setup "/bin/sleep 1";
+    start "/usr/sbin/klogd -n -c 3 -x";
+    stop kill;
+}
+

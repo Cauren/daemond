@@ -1,0 +1,14 @@
+
+
+service "acpid" {
+    description "APCI daemon";
+    group "_boot-clean";
+
+    need "/usr/sbin/acpid";
+    need "/proc/acpi";
+
+    start daemon "/usr/sbin/acpid";
+    stop kill;
+}
+
+

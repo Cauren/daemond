@@ -1,0 +1,27 @@
+
+
+service "sshd" {
+    description "Secure Shell service";
+    group "_boot-all";
+
+    need "network";
+    need "/usr/sbin/sshd";
+    need "/etc/ssh/ssh_config";
+
+    setup "
+	if [ ! -r /etc/ssh/ssh_host_key ]; then
+            /usr/bin/ssh-keygen -t rsa1 -f /etc/ssh/ssh_host_key -N '' 
+        fi
+        if [ ! -f /etc/ssh/ssh_host_dsa_key ]; then
+            /usr/bin/ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key -N ''
+        fi
+        if [ ! -f /etc/ssh/ssh_host_rsa_key ]; then
+            /usr/bin/ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key -N ''
+        fi
+        exit 0
+    ";
+    start daemon "/usr/sbin/sshd"
+	pidfile "/var/run/sshd.pid";
+    stop kill;
+}
+

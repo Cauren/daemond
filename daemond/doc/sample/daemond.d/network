@@ -1,0 +1,38 @@
+
+
+service "mount-nfs" {
+    description "Mount remote (NFS) filesystems";
+    group "mount-network";
+    need "network";
+    require "rpc.portmap";
+
+    setup "/sbin/mount -a -t nfs";
+    cleanup "/sbin/umount -a -t nfs";
+}
+
+service "mount-smb" {
+    description "Mount remote (SMB) filesystems";
+    group "mount-network";
+    need "network";
+    need "/etc/samba/smb.conf";
+
+    setup "/sbin/mount -a -t smbfs";
+    cleanup "/sbin/umount -a -t smbfs";
+}
+
+service "inetd" {
+    description "Inetd meta-server";
+    need "network";
+    need "/usr/sbin/inetd";
+
+    start daemon "/usr/sbin/inetd"
+	pidfile "/var/run/inetd.pid";
+    stop kill;
+}
+
+service "network" {
+    require "if-lo";
+    want "network-interfaces";
+    want "inetd";
+}
+

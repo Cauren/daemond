@@ -1,0 +1,12 @@
+
+
+service "hostname" {
+    description "Set the host name";
+    require "mount-local";
+    setup "
+	if [ ! -r /etc/HOSTNAME ]; then
+	    echo 'localhost.localdomain.' >/etc/HOSTNAME
+        fi
+        /bin/hostname $(cat /etc/HOSTNAME | cut -f1 -d .)
+    ";
+}

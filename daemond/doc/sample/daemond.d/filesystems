@@ -1,0 +1,13 @@
+
+service "fsck" {
+    description "Check filesystems";
+    require "lvm";
+    setup "/sbin/fsck -C -R -A -a";
+}
+
+service "mount-local" {
+    require "fsck";
+    description "Mount local filesystems";
+    setup "/sbin/mount -a -v -t nonfs,nosmbfs";
+}
+

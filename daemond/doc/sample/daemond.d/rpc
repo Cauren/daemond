@@ -1,0 +1,10 @@
+
+
+service "rpc.portmap" {
+    description "RPC port mapper";
+    require "network";
+
+    start daemon "/sbin/rpc.portmap";
+    stop kill;
+}
+

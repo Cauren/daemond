@@ -1,0 +1,11 @@
+You can build with the usual:
+
+	./configure
+	make
+
+There is no install target in the makefiles.  THIS IS NOT PRODUCTION CODE and
+automatically doing something as drastic as fiddling with your system bootstrap
+is suicidal.
+
+Check the file doc/README for some information.
+

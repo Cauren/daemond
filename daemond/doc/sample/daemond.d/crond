@@ -1,0 +1,11 @@
+
+
+service "crond" {
+    description "Cron (scheduled execution) daemon";
+    group "_boot-clean";
+    require "syslogd";
+
+    start "/usr/sbin/crond -f";
+    stop kill;
+}
+

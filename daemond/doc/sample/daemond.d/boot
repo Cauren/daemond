@@ -1,0 +1,48 @@
+#
+# boot-minimum is the bare minimum; enough to start a getty
+# or start other services, but little more.  Local filesystems
+# should be mounted and the playing field should be clean, but
+# as few daemons as possible should be running.
+#
+service "boot-minimum" {
+    description "Clean up and prepare temporary files";
+    require "mount-local";
+    require "hwclock";
+    require "hostname";
+    want "syslogd";
+    setup "
+	(cd /var/log/setup/tmp && rm -rf *)
+	rm -f /var/run/utmp /var/run/*pid /etc/nologin /var/run/lpd*
+	rm -f /var/run/ppp* /etc/dhcpc/dhcpc*.pid /etc/forcefsck /etc/fastboot
+	>/var/run/utmp
+	";
+}
+
+#
+# boot-clean is the normal "clean" system.  Most devices should
+# be avaliable by then, and local services to make the system
+# usable should be started.
+#
+# Avoid starting heavyweight services here; this is meant for a
+# quick boot into text mode with few or no public services.
+#
+service "boot-clean" {
+    require "boot-minimum";
+    require "isapnp";
+    require "randomseed";
+    require "syslogd";
+
+    want "_boot-clean";
+}
+
+#
+# boot-all may start public services, and is the "fully started"
+# system.  You normally want to make public services require this mode.
+#
+service "boot-all" {
+    require "_boot-clean";
+    require "boot-clean";
+
+    want "_boot-all";
+}
+

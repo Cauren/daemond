@@ -1,0 +1,10 @@
+
+service "lvm" {
+    description "Logical Volume Manager";
+    need "/etc/lvmtab";
+    setup "/sbin/vgscan";
+    setup "/sbin/vgchange -ay";
+
+    cleanup "/sbin/vgchange -an";
+}
+

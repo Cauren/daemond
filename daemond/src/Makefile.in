@@ -1,0 +1,58 @@
+####
+####  Labyrinth of Worlds
+####  Original Copyright (c) 1992 Looking Glass Studios
+####  Rewrite Copyright (c) 2002 Marc A. Pelletier
+####
+####  THIS SOFTWARE COMES WITH ABSOLUTELY NO WARRANTY! USE AT YOUR OWN RISK!
+####
+####  See the file COPYING for licensing information.
+####
+
+
+COMPILE=@CXX@ @CXXFLAGS@
+LINK=@CXX@ @LDFLAGS@
+MKDIR := mkdir -p
+DAEMOND_EXE=daemond@EXEEXT@
+DAEMOND_PARTS=exec log node parser rcfiles rcgr rclex service daemond main status_vc status
+STATUS_PARTS=
+DAEMOND_OBJ=$(addsuffix .@OBJEXT@, $(DAEMOND_PARTS))
+STATUS_OBJ=$(addsuffix .@OBJEXT@, $(STATUS_PARTS))
+DEPDIR := .deps
+DEPFILES = $(wildcard $(patsubst %,%/*.d,$(DEPDIR)))
+
+all:		$(DAEMOND_EXE) $(STATUS_OBJ)
+
+%.o		: %.cc
+		@$(MKDIR) $(*D)/$(DEPDIR)
+		$(COMPILE) -Wp,-MMD,"$(*D)/$(DEPDIR)/$(*F).d",-MQ,"$@",-MP -c $(<) -o $*.o
+
+%.cc		: %.l
+		@LEX@ -ifs8 -orclex.cc rclex.l
+
+%.hh %.cc	: %.y
+		@YACC@ -d $<
+		mv y.tab.c $*.cc
+		mv y.tab.h $*.hh
+
+rclex.l		: rcgr.hh
+
+keywords.h	: rcgr.hh
+		sed -ne '/^# define\t\([A-Z][A-Za-z]*\)\t\([0-9][0-9]*\).*/{s//\1=\2,/ p}' rcgr.hh >keywords.h
+
+$(DAEMOND_EXE):	$(DAEMOND_OBJ)
+		$(LINK) -g -o $(DAEMOND_EXE) $^ @LIBS@
+
+clean:
+		rm -f *.@OBJEXT@ *.rpo
+		rm -f $(DAEMOND_EXE)
+		rm -f rcgr.cc rchr.hh rclex.cc
+
+distclean:	clean
+		rm -f Makefile
+		rm -rf $(DEPDIR)
+
+# Regenerate Makefile if Makefile.in has changed
+Makefile:	Makefile.in ../config.status
+		(cd ..;CONFIG_FILES=src/Makefile CONFIG_HEADERS= ./config.status)
+
+-include $(DEPFILES) /dev/null

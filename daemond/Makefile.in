@@ -1,0 +1,30 @@
+####
+####  Labyrinth of Worlds
+####  Original Copyright (c) 1992 Looking Glass Studios
+####  Rewrite Copyright (c) 2002 Marc A. Pelletier
+####
+####  THIS SOFTWARE COMES WITH ABSOLUTELY NO WARRANTY! USE AT YOUR OWN RISK!
+####
+####  See the file COPYING for licensing information.
+####
+
+
+all:
+		(cd src;make all)
+
+install:
+		(cd src;make install)
+
+clean:
+		(cd src;make clean)
+
+distclean:
+		(cd src;make distclean)
+		rm -f configure config.log config.status
+		rm -f Makefile
+		rm -rf stamp-h1 autom4te.cache
+
+# Regenerate Makefile if Makefile.in has changed
+Makefile:	Makefile.in config.status
+		CONFIG_FILES=Makefile CONFIG_HEADERS= ./config.status
+
