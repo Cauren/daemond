@@ -82,7 +82,59 @@ namespace RcFiles {
 
 	Section*	s = 0;
 
-	switch(type)
+	if(name)
+	    s = Section::find(name, true);
+	else
+	    s = Section::find(type, true);
+
+	if(s)
+	  {
+	    s->stale = false;
+	    if(s->desc)
+		delete[] s->desc;
+	    s->desc = 0;
+	    if(s->icon)
+		delete[] s->icon;
+	    s->icon = 0;
+	    if(s->caption)
+		delete[] s->caption;
+	    s->caption = 0;
+	    if(SectionWithSetup* su = dynamic_cast<SectionWithSetup*>(s))
+	      {
+		if(su->setup_.directives)
+		  {
+		    delete su->setup_.directives;
+		    su->setup_.directives = 0;
+		  }
+		if(su->cleanup_.directives)
+		  {
+		    delete su->cleanup_.directives;
+		    su->cleanup_.directives = 0;
+		  }
+	      }
+	    if(SectionWithDependencies* de = dynamic_cast<SectionWithDependencies*>(s))
+	      {
+		if(de->require)
+		  {
+		    delete de->require;
+		    de->require = 0;
+		  }
+	      }
+	    if(Service* se = dynamic_cast<Service*>(s))
+	      {
+		if(se->stop_.given)
+		  {
+		    se->stop_.cmd.empty();
+		    se->stop_.given = false;
+		  }
+		if(se->start_.given)
+		  {
+		    se->start_.cmd.empty();
+		    se->start_.given = false;
+		  }
+	      }
+	  }
+	else switch(type)
 	  {
 	    case Section::SysInitSection:
 	    case Section::SetupSection:

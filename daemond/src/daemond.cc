@@ -78,6 +78,7 @@ void DaemonState::run(void)
   {
     sigset_t		sigset;
     struct sigaction	sa;
+    bool		force_status_update = true;
 
     sigprocmask(SIG_SETMASK, 0, &sa.sa_mask);
     sigdelset(&sa.sa_mask, SIGCHLD);
@@ -117,6 +118,8 @@ void DaemonState::run(void)
     static char	cbuf[128];
     static int	clen = 0;
 
+    load_status_object("vc");
+
     for(;;) // fresh config
       {
 	if(chdir(daemond.var_dir))
@@ -144,7 +147,6 @@ void DaemonState::run(void)
 	    return log(LOG_CRIT, "unable to create pid file: %m");
 
 	Section::bind_all_references();
-	load_status_object(0);
 
 	signal_refresh = false;
 	while(!signal_refresh) // start mode
@@ -171,12 +173,37 @@ newmode:    if(!ms || ms->status==Section::Failed)
 		    s->status = Section::Stopped;
 	      }
 
-	    ms->want = Section::Enabled;
+	    if(!signal_die)
+		ms->want = Section::Enabled;
 
 	    bool	do_recalc = true;
 
 	    while(!signal_refresh) // main loop
 	      {
+		if(signal_die)
+		  {
+		    bool anyrun = false;
+
+		    ms->want = Section::Disabled;
+		    for(Section* s=Section::first; s; s=s->next)
+		      {
+			if(s->want == Section::Enabled)
+			    s->want = Section::Automatic;
+			anyrun |= s->running();
+		      }
+
+		    if(!anyrun)
+			return;
+		  }
+
+		for(Section* s=Section::first; s; )
+		  {
+		    Section* n = s->next;
+		    if(s->stale && (s->status==Section::Stopped || s->status>=Section::Dead))
+			delete s;
+		    s = n;
+		  }
+
 		if(do_recalc)
 		  {
 		    Section::recalculate();
@@ -227,7 +254,8 @@ newmode:    if(!ms || ms->status==Section::Failed)
 			do_recalc = true;
 		  }
 
-		status_update();
+		status_update(force_status_update);
+		force_status_update = false;
 
 		alarm(1);
 		sigsuspend(&sigset);
@@ -239,51 +267,74 @@ newmode:    if(!ms || ms->status==Section::Failed)
 		    if(clen==127 || cbuf[clen]=='\n')
 		      {
 			Section::Want	w;
-			const char*	arg;
+			char*	arg = cbuf;
 
 			cbuf[clen] = 0;
 			clen = 0;
 
-			if(!strncmp("mode ", cbuf, 5))
+			while(*arg>='0' && *arg<='9')
+			    arg++;
+			if(*arg)
+			    *arg++ = 0;
+			cmdserial = atoi(cbuf);
+			force_status_update = true;
+
+			if(!strncmp("mode ", arg, 5))
 			  {
-			    Mode* nm = dynamic_cast<Mode*>(Section::find(cbuf+5));
+			    Mode* nm = dynamic_cast<Mode*>(Section::find(arg+5));
 			    if(nm)
 			      {
 				delete[] mode;
-				mode = strdup(cbuf+5);
+				mode = strdup(arg+5);
 				ms = nm;
+				strcpy(cmdres, "Altering mode");
 				goto newmode;
 			      }
+			    else
+				strcpy(cmdres, "Unknown mode");
 			  }
-			else if(!strncmp("start ", cbuf, 6))
+			else if(!strncmp("start ", arg, 6))
 			  {
-			    arg = cbuf+6;
+			    arg = arg+6;
 			    w = Section::Enabled;
 			    goto change;
 			  }
-			else if(!strncmp("stop ", cbuf, 5))
+			else if(!strncmp("stop ", arg, 5))
 			  {
-			    arg = cbuf+5;
+			    arg = arg+5;
 			    w = Section::Disabled;
 			    goto change;
 			  }
-			else if(!strncmp("auto ", cbuf, 5))
+			else if(!strncmp("auto ", arg, 5))
 			  {
-			    arg = cbuf+5;
+			    arg = arg+5;
 			    w = Section::Automatic;
 change:			    if(Service* s=dynamic_cast<Service*>(Section::find(arg)))
+			      {
 				if(s->want != w)
 				  {
 				    s->want = w;
 				    do_recalc = true;
+				    strcpy(cmdres, "Ok");
 				  }
+				else
+				    strcpy(cmdres, "No change");
+			      }
+			    else
+				strcpy(cmdres, "Unknown service");
 			  }
-			else if(!strcmp("reload", cbuf))
+			else if(!strcmp("reload", arg))
+			  {
 			    signal_refresh = true;
+			    strcpy(cmdres, "Reloading");
+			  }
+			else
+			    strcpy(cmdres, "Unknown command");
 		      }
 		    else if(cbuf[clen] >= ' ')
 			clen++;
 	      }
 	  }
+	RcFiles::parse_rc_files();
       }
   }

@@ -94,7 +94,7 @@ namespace Daemond {
 			Section(Type, const char*);
 	virtual		~Section();
 
-	bool		on(void)			{ return want==Enabled || want==Wanted; };
+	bool		on(void)			{ return !stale && (want==Enabled || want==Wanted); };
 	bool		running(void)			{ return status==Running; };
 
 	virtual bool	process(void)			{ return false; };
@@ -111,8 +111,8 @@ namespace Daemond {
 	virtual void	cleanup(bool fail=false)	{ status=Stopped; }; // no cleanup
 	virtual bool	reap(pid_t, bool)		{ return false; };
 
-	static Section*	find(const char* name);
-	static Section*	find(Type t);
+	static Section*	find(const char* name, bool all=false);
+	static Section*	find(Type t, bool all=false);
 
 	static void	bind_all_references(void);
 	static void	recalculate(void);

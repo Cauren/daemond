@@ -129,8 +129,10 @@ namespace Daemond {
       {
 	for(Dependency* d=require; d; d=d->next)
 	    if(SectionDependency* sd=dynamic_cast<SectionDependency*>(d))
+	      {
 		if(sd->name)
 		    sd->section = Section::find(sd->name);
+	      }
       }
 
 
@@ -168,21 +170,21 @@ namespace Daemond {
 	//      this section in dependencies and such?
       }
 
-    Section* Section::find(const char* name)
+    Section* Section::find(const char* name, bool all)
       {
 	if(!name)
 	    return 0;
 
 	for(Section* s=first; s; s=s->next)
-	    if(s->name && !strcmp(s->name, name))
+	    if(s->name && !strcmp(s->name, name) && (all || !s->stale))
 		return s;
 	return 0;
       }
 
-    Section* Section::find(Type t)
+    Section* Section::find(Type t, bool all)
       {
 	for(Section* s=first; s; s=s->next)
-	    if(s->type==t)
+	    if(s->type==t && (all || !s->stale))
 		return s;
 	return 0;
       }

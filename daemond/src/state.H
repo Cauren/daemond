@@ -12,10 +12,15 @@ namespace Daemond {
 	bool		signal_pipe;
 	bool		signal_refresh;
 	bool		signal_die;
+	bool		be_quiet;
 
+	const char*	rcfile;
 	const char*	default_mode;
 	const char*	mode;
 	const char*	var_dir;
+
+	char		cmdres[128];
+	int		cmdserial;
 
 	void		run(void);
     };

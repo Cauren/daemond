@@ -43,8 +43,8 @@ $(DAEMOND_EXE):	$(DAEMOND_OBJ)
 		$(LINK) -g -o $(DAEMOND_EXE) $^ @LIBS@
 
 install:
-                @echo "* No install target is provided for safety reasons."
-                @echo "  The INSTALL file contains installation hints you can refer to."
+		@echo "* No install target is provided for safety reasons."
+		@echo "  The INSTALL file contains installation hints you can refer to."
 
 clean:
 		rm -f *.@OBJEXT@ *.rpo

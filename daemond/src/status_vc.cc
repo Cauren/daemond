@@ -114,6 +114,7 @@ struct sstatus_ {
     bool		waiting;
     bool		unavaliable;
     bool		updated;
+    bool		gone;
 };
 static sstatus_*	ss = 0;
 static int		numss = 0;
@@ -121,6 +122,9 @@ static int		numss = 0;
 
 extern "C" void dyn_status_init(void)
   {
+    if(daemond.be_quiet)
+	return;
+
     winsize	ws;
 
     if(!ioctl(1, TIOCGWINSZ, &ws))
@@ -160,12 +164,18 @@ extern "C" int kompar(const void* p1, const void* p2)
 	return -1;
     if(s1->s->type!=Section::ServiceSection && s2->s->type==Section::ServiceSection)
 	return 1;
-    return strcmp(s1->s->name, s2->s->name);
+    if(s1->s->name && s2->s->name)
+	return strcmp(s1->s->name, s2->s->name);
+    return s1>s2;
   }
 
-extern "C" void dyn_status_update(void)
+extern "C" bool dyn_status_update(void)
   {
     bool	anyupdate = false;
+
+    for(int i=0; i<numss; i++)
+	if(ss[i].s)
+	    ss[i].gone = true;
 
     for(Section* s=Section::first; s; s=s->next)
       {
@@ -179,11 +189,13 @@ extern "C" void dyn_status_update(void)
 	int	si;
 	for(si=0; si<numss; si++)
 	    if(ss[si].s == s)
+	      {
+		ss[si].gone = false;
 		break;
+	      }
+
 	if(si >= numss)
 	  {
-	    if(s->stale)
-		continue;
 	    for(si=0; si<numss; si++)
 		if(!ss[si].s)
 		  {
@@ -191,79 +203,76 @@ extern "C" void dyn_status_update(void)
 		    ss[si].updated = true;
 		    ss[si].unavaliable = s->unavaliable();
 		    ss[si].waiting = wai;
+		    ss[si].gone = false;
 		    anyupdate = true;
 		    break;
 		  }
-	  }
-	else if(si >= numss)
 	    continue;
-	else
-	  {
-	    if(s->stale && s->status==Section::Stopped)
-	      {
-		ss[si].s = 0;
-		anyupdate |= ss[si].updated = true;
-	      }
-	    else
-	      {
-		anyupdate |= ss[si].updated = (s->status != ss[si].was);
-		if(wai != ss[si].waiting)
-		  {
-		    ss[si].waiting = wai;
-		    anyupdate = ss[si].updated = true;
-		  }
-		wai = s->unavaliable();
-		if(wai != ss[si].unavaliable)
-		  {
-		    ss[si].unavaliable = wai;
-		    anyupdate = ss[si].updated = true;
-		  }
-		ss[si].was = s->status;
-	      }
 	  }
+
+	anyupdate |= ss[si].updated = (s->status != ss[si].was);
+	if(wai != ss[si].waiting)
+	  {
+	    ss[si].waiting = wai;
+	    anyupdate = ss[si].updated = true;
+	  }
+	wai = s->unavaliable();
+	if(wai != ss[si].unavaliable)
+	  {
+	    ss[si].unavaliable = wai;
+	    anyupdate = ss[si].updated = true;
+	  }
+	ss[si].was = s->status;
+	ss[si].gone = false;
       }
 
+    for(int i=0; i<numss; i++)
+	if(ss[i].s && ss[i].gone)
+	  {
+	    ss[i].s = 0;
+	    anyupdate = ss[i].updated = true;
+	  }
+
     if(!anyupdate)
-	return;
+	return false;
+
+    if(daemond.be_quiet)
+	return true;
 
     qsort(ss, numss, sizeof(sstatus_), kompar);
 
     begin_output();
     for(int si=0; si<numss; si++)
       {
-	if(ss[si].s && ss[si].s->stale)
+	ss[si].updated = false;
+	output("\033[%d;%dH\033[0m", (si%w_numl)+1, (si/w_numl)*w_cw+1);
+	if(!ss[si].s)
 	  {
-	    ss[si].s = 0;
-	    ss[si].updated = true;
+	    pad(' ', w_cw);
+	    continue;
 	  }
-	if(ss[si].updated)
+	// ----------------------
+	// Cnnnnnnnnnnnn XXXXXX
+	switch(ss[si].s->want)
 	  {
-	    ss[si].updated = false;
-	    output("\033[%d;%dH\033[0m", (si%w_numl)+1, (si/w_numl)*w_cw+1);
-	    if(!ss[si].s)
-	      {
-		pad(' ', w_cw);
-		continue;
-	      }
-	    // ----------------------
-	    // Cnnnnnnnnnnnn XXXXXX
-	    switch(ss[si].s->want)
-	      {
-		case Section::Disabled:
-		    output("!\033[30;1m");
-		    break;
-		case Section::Automatic:
-		    output(" ");
-		    break;
-		case Section::Wanted:
-		    output(" \033[1m");
-		    break;
-		case Section::Enabled:
-		    output("*\033[1m");
-		    break;
-	      }
+	    case Section::Disabled:
+		output("!\033[30;1m");
+		break;
+	    case Section::Automatic:
+		output(" ");
+		break;
+	    case Section::Wanted:
+		output(" \033[1m");
+		break;
+	    case Section::Enabled:
+		output("*\033[1m");
+		break;
+	  }
 
-	    static const char*	sdisp[] = {
+	if(ss[si].s && ss[si].s->stale)
+	    output("\033[31m");
+
+	static const char*	sdisp[] = {
 		"\033[32m"	"WAITING",
 				"UNAVAIL",
 				"       ",
@@ -275,17 +284,17 @@ extern "C" void dyn_status_update(void)
 		"\033[33m"	"DEAD   ",
 		"\033[31m"	"FAILED ",
 		"\033[31m"	"FAILED ",
-	    };
+	};
 
-	    int	sd = int(ss[si].s->status)+2;
+	int	sd = int(ss[si].s->status)+2;
 
-	    if(ss[si].waiting)
-		sd = 0;
-	    if(ss[si].unavaliable)
-		sd = 1;
-	    output("%-*.*s %s  \033[37m", w_cw-11, w_cw-11, ss[si].s->name, sdisp[sd]);
-	  }
+	if(ss[si].waiting)
+	    sd = 0;
+	if(ss[si].unavaliable)
+	    sd = 1;
+	output("%-*.*s %s  \033[37m", w_cw-11, w_cw-11, ss[si].s->name, sdisp[sd]);
       }
     flush_output();
+    return true;
   }
 

@@ -17,9 +17,9 @@ namespace RcFiles {
 	RcFile*		prev;
 
 	const char*	name;
-	time_t		last_parse;
 	bool		file_gone;
 	bool		in_rcdir;
+	bool		parsed;
 	Node*		parse_tree;
     };
 

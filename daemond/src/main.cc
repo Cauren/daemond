@@ -19,10 +19,10 @@ static struct option	opts[] = {
       { "help", 0, 0, 'h' },
       { "check-config", 0, 0, 'c' },
       { "send", 0, 0, 's' },
+      { "quiet", 0, 0, 'q' },
       { }
 };
 
-static const char*	rcfile = 0;
 static char		daemon_name[128];
 
 int main(int argc, char** argv)
@@ -36,6 +36,7 @@ int main(int argc, char** argv)
     bool	docmd = false;
     bool	docheck = false;
     bool	dousage = false;
+    bool	doquiet = false;
 
     int op;
     while((op=getopt_long(argc, argv, "+df:sech", opts, 0)) != -1)
@@ -56,18 +57,21 @@ int main(int argc, char** argv)
 		dousage = docmd;
 		break;
 	    case 'f':
-		if(rcfile)
+		if(daemond.rcfile)
 		    dousage = true;
 		else
-		    rcfile = strdup(optarg);
+		    daemond.rcfile = strdup(optarg);
+		break;
+	    case 'q':
+		doquiet = true;
 		break;
 	    default:
 		dousage = true;
 		break;
 	  }
 
-    if(!rcfile)
-	rcfile = "/etc/daemond.rc";
+    if(!daemond.rcfile)
+	daemond.rcfile = "/etc/daemond.rc";
 
     if(docheck || docmd)
 	nosyslog = true;
@@ -82,12 +86,17 @@ int main(int argc, char** argv)
 	fprintf(stderr, "usage: %s [options] [mode]\n", daemon_name);
 	fprintf(stderr, "       %s [options] (-s|--send) command\n", daemon_name);
 	fprintf(stderr, "       %s [options] (-c|--check-config)\n", daemon_name);
+	fprintf(stderr, "options:\n"
+			"       --debug|-d         Log additional debugging information\n"
+			"       --stderr|-s        Log to stderr instead of syslog\n"
+			"       --rcfile|-f <file> Use <file> instead of /etc/daemond.rc\n"
+			"	--quiet|-q         Don't display the pretty status screen\n");
 	return 1;
       }
 
     log_open(daemon_name, nosyslog, dodebug);
 
-    RcFiles::add_rc_file(rcfile);
+    RcFiles::add_rc_file(daemond.rcfile);
     if(!RcFiles::parse_rc_files())
 	goto panic;
 
@@ -99,13 +108,66 @@ int main(int argc, char** argv)
 
     if(docmd)
       {
-	return 0;
+	if(chdir(daemond.var_dir))
+	    return log(LOG_EMERG, "unable to chdir() to vardir '%s': %m", daemond.var_dir), 1;
+	int fd = open("daemond.pipe", O_WRONLY);
+	if(fd < 0)
+	    return log(LOG_ERR, "unable to open the command pipe for writing: %m"), 1;
+	FILE* fp = fdopen(fd, "a");
+
+	FILE* sb = fopen("daemond.score", "r");
+
+	if(!sb)
+	    return log(LOG_ERR, "unable to open scoreboard file: %m"), 1;
+
+	int	serial, myserial;
+	char	mode[128], result[128];
+
+	if(fscanf(sb, "%[^:]:%d:%[^\n]\n", mode, &serial, result) < 2)
+	    return log(LOG_ERR, "scoreboard file is invalid"), 1;
+	fclose(sb);
+	myserial = serial+1;
+
+	fprintf(fp, "%d %s%s%s\n", myserial, argv[optind],
+		(optind==(argc-1))? "": " ",
+		(optind==(argc-1))? "": argv[optind+1]);
+	fclose(fp);
+	close(fd);
+
+	// There is a possible (though mostly harmless) race condition here; if
+	// two instances send commands mostly simultaneously they will probably
+	// get confused results-- but the commands will have worked.  Working
+	// around that would mean having to put in place some synchronisation
+	// between the daemon and instances that send commands-- probably more
+	// trouble than is worth.
+
+	int tries = 0;
+	for(;;)
+	  {
+	    sb = fopen("daemond.score", "r");
+
+	    if(!sb)
+		return log(LOG_ERR, "unable to open scoreboard file: %m"), 1;
+	    if(fscanf(sb, "%[^:]:%d:%[^\n]\n", mode, &serial, result) < 2)
+		return log(LOG_ERR, "scoreboard file is invalid"), 1;
+	    fclose(sb);
+	    if(serial >= myserial)
+	      {
+		printf("%s (in mode %s)\n", result, mode);
+		return 0;
+	      }
+	    sleep(1);
+	    if(++tries > 10)
+		return log(LOG_WARNING, "daemon appears unresponsive"), 1;
+	  }
       }
 
     if(optind < argc)
 	daemond.mode = strdup(argv[optind]);
     else if(daemond.default_mode)
 	daemond.mode = strdup(daemond.default_mode);
+
+    daemond.be_quiet = doquiet;
 
     daemond.run();
 
@@ -115,7 +177,7 @@ panic:
 	fprintf(stderr, "Oh, no!  Unable to give you a working init!\n");
 	fprintf(stderr, "Starting a command shell.\n\n");
 	execl("/bin/sh", "-sh", 0);
-	fprintf(stderr, "Erp.  giving up.\n");
+	fprintf(stderr, "Erp.  giving up.  Goodbye!\n");
       }
     return 1;
   }

@@ -9,6 +9,7 @@
 #include "node.H"
 #include "rcfiles.H"
 #include "parser.H"
+#include "service.H"
 
 
 namespace RcFiles {
@@ -35,7 +36,6 @@ namespace RcFiles {
 	  {
 	    rcf = new RcFile;
 	    rcf->name = strdup(fname);
-	    rcf->last_parse = 0;
 	    rcf->parse_tree = 0;
 	    rcf->next = 0;
 	    rcf->in_rcdir = rcdir;
@@ -101,6 +101,13 @@ namespace RcFiles {
 	RcFile*	rcf;
 	bool	at_least_one;
 	more_than_one_rcdir = 0;
+
+	for(Daemond::Section* s=Daemond::Section::first; s; s=s->next)
+	    s->stale = true;
+
+	for(rcf=RcFile::first; rcf; rcf=rcf->next)
+	    rcf->parsed = false;
+
 restart:
 	at_least_one = false;
 	if(more_than_one_rcdir == 2)
@@ -111,15 +118,14 @@ restart:
 	for(rcf=RcFile::first; rcf; rcf=rcf->next)
 	    if(!rcf->file_gone)
 	      {
-		struct stat	sb;
-
-		stat(rcf->name, &sb);
-		if(sb.st_mtime > rcf->last_parse)
+		log(LOG_DEBUG, "reading configuration file %s", rcf->name);
+		/* FIXME: leak here because deleting a parse tree fails
+		if(rcf->parse_tree)
+		    delete rcf->parse_tree;
+		    */
+		if(!rcf->parsed)
 		  {
-		    log(LOG_DEBUG, "reading configuration file %s", rcf->name);
-		    rcf->last_parse = sb.st_mtime;
-		    if(rcf->parse_tree)
-			delete rcf->parse_tree;
+		    rcf->parsed = true;
 		    rcf->parse_tree = parse(rcf->name);
 		    if(rcf->parse_tree)
 		      {
@@ -130,8 +136,6 @@ restart:
 		    else
 			log(LOG_DEBUG, "file %s has no valid contents", rcf->name);
 		  }
-		else
-		    at_least_one = true;
 	      }
 
 	if(!at_least_one)
