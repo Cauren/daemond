@@ -6,7 +6,7 @@ dnl (Thanks, Michael and Willem)
 dnl
 
 AC_PREREQ(2.53)
-AC_INIT([Daemond], [0.1], [coren@users.sourceforge.net], [daemond])
+AC_INIT([Daemond], [0.2], [coren@users.sourceforge.net], [daemond])
 AC_CONFIG_SRCDIR([src/exec.H])
 
 CXXCODE="-O -DRELEASE"
@@ -23,13 +23,13 @@ AC_LANG_CPLUSPLUS
 AC_PROG_YACC
 AC_PROG_LEX
 AC_PROG_CXX
-AC_PROG_INSTALL
 
 AC_CONFIG_HEADER([src/config.h])
 
 AC_MSG_CHECKING([for debugging version])
-AC_ARG_ENABLE(debug,
-	[  --enable-debug          enable debugging (disables optimizations)],
+AC_ARG_ENABLE(debug, AC_HELP_STRING(
+	[--enable-debug],
+	[enable debugging (also disables optimizations)]),
 	[	CXXCODE="-O0 -ggdb3 -Wall -Werror"
 		AC_MSG_RESULT(yes)
 	], AC_MSG_RESULT(no))

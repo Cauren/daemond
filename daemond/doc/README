@@ -95,6 +95,54 @@ dependencies come in several flavors:
 	contain dependencies.
 
 -------------------------------------------------------------------------------
+Starting services
+-------------------------------------------------------------------------------
+
+A stopped service attempts to start when:
+
+- it is started manually;
+- it is listed as a dependency of a service or group that is attempting to
+  start; or
+- it is listed in a "want" directive of a service that has succesfully started.
+
+Whenever a service is to be started a number of things are done:
+
+- Every service or group specified in a "need" or "require" directive is
+  started unless marked unavaliable;
+- wait until all dependencies are satisfied; if any of the dependencies fail,
+  then fail the service (unavaliable services are ignored);
+- every "setup" directive is executed, in the order listed in the section.  If
+  any of them fail, the service start fails;
+- the "start" directive is executed if it exists and the service fails if
+  it returns an error.  In that case, every "cleanup" directive is executed
+  until one fails.
+- the service is marked as running; then
+- every service appearing in a "want" directive is forced to be started.
+
+-------------------------------------------------------------------------------
+How services are stopped
+-------------------------------------------------------------------------------
+
+A running service attempts to stop when:
+
+- it is stopped manually;
+- any of its dependencies have stopped of failed; or
+- it is set to start automatically and no other service depends on it or list
+  it in a "want" directive.
+
+When the service attempts to stop it will:
+
+- if there is a "stop" directive, then it is executed to attempt to stop the
+  service.  The default is to try to kill it with SIGTERM, then with SIGKILL.
+- once the daemon dies (or if the service had no daemon to begin with), the
+  service is marked as no longer running;
+- services appearing in "want" directives are no longer forced to run; they
+  may stop if no other service requires or wants them;
+- every "cleanup" directive is executed, stopping if one fails;
+- dependencies are released, also possibly allowing them to stop if they
+  are not manually on or required by other services.
+
+-------------------------------------------------------------------------------
 Commands understood by the running daemon
 -------------------------------------------------------------------------------
 

@@ -29,7 +29,7 @@ void yyerror(const char*);
 %token<str>	STRING BADTOKEN
 %token		SysInit Startup Service Start Stop Setup Daemon Once
 %token		PIDFile Kill Require All Any Group Optionnal Parameter
-%token		Type String Numeric IP Default Description Icon If Need
+%token		Type String Numeric IP Default Description Caption If Need
 %token		Boolean Critical RcDir VarDir Mode Cleanup Want Module
 
 %type<node>	setup_cmd setup_cmds start_pid start_how sdefault ndefault
@@ -120,8 +120,8 @@ service_cmd	: Group string ';'			{ $$ = new Node(1, Group, $2); }
 		| Parameter string param_opts ';'	{ $$ = new Node(2, Parameter, $2, $3); }
 		| If string '{' service_list '}'	{ $$ = new Node(2, If, $2, $4); }
 		| Description string ';'		{ $$ = new Node(1, Description, $2); }
-		| Icon string ';'			{ $$ = new Node(1, Icon, $2); }
-		| Icon string string ';'		{ $$ = new Node(2, Icon, $2, $3); }
+		| Caption string ';'			{ $$ = new Node(1, Caption, $2); }
+		| Caption string string ';'		{ $$ = new Node(2, Caption, $2, $3); }
 		| Critical ';'				{ $$ = new Node(0, Critical); }
 		| setup_cmd
 		| dep_cmd

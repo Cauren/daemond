@@ -81,7 +81,7 @@ Boolean/[^a-z]		{ return Boolean; }
 IP/[^a-z]		{ return IP; }
 Default/[^a-z]		{ return Default; }
 Description/[^a-z]	{ return Description; }
-Icon/[^a-z]		{ return Icon; }
+Caption/[^a-z]		{ return Caption; }
 If/[^a-z]		{ return If; }
 Critical/[^a-z]		{ return Critical; }
 RcDir/[^a-z]		{ return RcDir; }

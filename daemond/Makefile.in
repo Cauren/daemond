@@ -13,7 +13,8 @@ all:
 		(cd src;make all)
 
 install:
-		(cd src;make install)
+		@echo "* No install target is provided for safety reasons."
+		@echo "  The INSTALL file contains installation hints you can refer to."
 
 clean:
 		(cd src;make clean)
