@@ -9,7 +9,10 @@ services easily.
 
 But do try it!  Make it work (or not), and tell me about it.  I want this to
 someday be a mainstream alternative to the antedeluvian SysV and BSD inits,
-and it needs to be hammered on by lots of people.
+and it needs to be hammered on by lots of people.  If you created the
+service definition files to make your system boot right, I almost certainly
+want a copy-- especially if you are using a standard distribution-- so that
+I can distribute those as well.
 
 You could, also, use it as a meta daemon that manages other daemons without
 going through the trouble of replacing your init and basic bootstrap.  This
@@ -20,7 +23,7 @@ What it does is try to start as many things as possible at the same time,
 keeping track of potentially intricate ordering and dependecies.  This is
 fast, but this is also easy to break.
 
-THERE IS NO DOCUMENTATION YET!
+THERE IS NO REAL DOCUMENTATION YET!
 
 You can take a peek in doc/sample which is my currently working configuration.
 (goes in /etc; at least the daemond.rc does, the daemond.d dir is pointed to
@@ -30,20 +33,6 @@ rcgr.y if you grok formal grammars to see the complete syntax allowed in
 configuration files.
 
 There are a few config file hints below.
-
-Things that do not yet work:
-
-  - Reloading config files.  Don't SIGHUP your init.  You have been warned.
-
-  - Section parameters.  Actually, those will probably never work. I thought
-    I would need them early in design and then realised they are not that
-    useful after all.
-
-  - using the executable to send a command to the running daemon.  Don't
-    mind what the program tells you, it's lying.  You can send commands
-    to the running daemon by simply echoing them to the daemond.pipe fifo
-    that gets created in the configured var/run dir.  See below for which
-    commands are understood.
 
 WARNING!  ACHTUNG!  DANGER!
 
@@ -154,12 +143,10 @@ Commands understood by the running daemon
   stop <service>
   auto <service>
         Changes the mode of operation of <service> to, respectively, always on,
-	always off, and automatic according to dependencies.
+	always off, and automatic according to the operating mode and
+	dependencies.
 
   reload
   	This will make the daemon attempt to reload its configuration files and
-	bring services up or down as appropriate.  The daemon will then fail
-	horribly because most of the code for that isn't in place and, at best,
-	will die (possibly bringing down your system if it was also running
-	as init).  Don't send this command.
+	bring services up or down as appropriate.
 
