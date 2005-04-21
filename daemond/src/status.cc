@@ -11,11 +11,11 @@ static void noop(void)
   }
 
 void	(*status_init_func)(void) = noop;
-void	(*status_update_func)(void) = noop;
+bool	(*status_update_func)(void) = (bool(*)(void))noop;
 
 void load_status_object(const char* soname)
   {
-    void*	so = dlopen(soname, RTDL_NOW);
+    void*	so = dlopen(soname, RTLD_NOW);
 
     if(so)
       {
@@ -25,7 +25,7 @@ void load_status_object(const char* soname)
 	if(si && su)
 	  {
 	    status_init_func = (void(*)(void))si;
-	    status_update_func = (void(*)(void))su;
+	    status_update_func = (bool(*)(void))su;
 	    status_init_func();
 	  }
       }

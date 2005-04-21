@@ -39,7 +39,7 @@ int main(int argc, char** argv)
     bool	doquiet = false;
 
     int op;
-    while((op=getopt_long(argc, argv, "+df:sech", opts, 0)) != -1)
+    while((op=getopt_long(argc, argv, "+df:sechv:", opts, 0)) != -1)
 	switch(op)
 	  {
 	    case 'e':
@@ -62,6 +62,14 @@ int main(int argc, char** argv)
 		else
 		    daemond.rcfile = strdup(optarg);
 		break;
+#ifdef LOADABLE_STATUS
+	    case 'v':
+		if(daemond.visual)
+		    dousage = true;
+		else
+		    daemond.visual = strdup(optarg);
+		break;
+#endif
 	    case 'q':
 		doquiet = true;
 		break;
@@ -72,6 +80,9 @@ int main(int argc, char** argv)
 
     if(!daemond.rcfile)
 	daemond.rcfile = "/etc/daemond.rc";
+
+    if(!daemond.visual)
+	daemond.visual = "status_vc.o";
 
     if(docheck || docmd)
 	nosyslog = true;
@@ -88,9 +99,13 @@ int main(int argc, char** argv)
 	fprintf(stderr, "       %s [options] (-c|--check-config)\n", daemon_name);
 	fprintf(stderr, "options:\n"
 			"       --debug|-d         Log additional debugging information\n"
-			"       --stderr|-s        Log to stderr instead of syslog\n"
+			"       --stderr|-e        Log to stderr instead of syslog\n"
 			"       --rcfile|-f <file> Use <file> instead of /etc/daemond.rc\n"
-			"	--quiet|-q         Don't display the pretty status screen\n");
+			"	--quiet|-q         Don't display the pretty status screen\n"
+#ifdef LOADABLE_STATUS
+			"	--visual|-v <file> Select visual status interface\n"
+#endif
+			);
 	return 1;
       }
 

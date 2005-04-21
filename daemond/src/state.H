@@ -15,6 +15,7 @@ namespace Daemond {
 	bool		be_quiet;
 
 	const char*	rcfile;
+	const char*	visual;
 	const char*	default_mode;
 	const char*	mode;
 	const char*	var_dir;

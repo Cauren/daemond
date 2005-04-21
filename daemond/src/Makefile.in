@@ -14,17 +14,21 @@ LINK=@CXX@ @LDFLAGS@
 MKDIR := mkdir -p
 DAEMOND_EXE=daemond@EXEEXT@
 DAEMOND_PARTS=exec log node parser rcfiles rcgr rclex service daemond main status_vc status
-STATUS_PARTS=
+STATUS_PARTS=status_vc status_file
 DAEMOND_OBJ=$(addsuffix .@OBJEXT@, $(DAEMOND_PARTS))
-STATUS_OBJ=$(addsuffix .@OBJEXT@, $(STATUS_PARTS))
+STATUS_OBJ=$(addsuffix .so, $(STATUS_PARTS))
 DEPDIR := .deps
 DEPFILES = $(wildcard $(patsubst %,%/*.d,$(DEPDIR)))
 
 all:		keywords.h $(DAEMOND_EXE) $(STATUS_OBJ)
 
-%.o		: %.cc
+%.@OBJEXT@		: %.cc
 		@$(MKDIR) $(*D)/$(DEPDIR)
-		$(COMPILE) -Wp,-MMD,"$(*D)/$(DEPDIR)/$(*F).d",-MQ,"$@",-MP -c $(<) -o $*.o
+		$(COMPILE) -DLOADABLE_STATUS -Wp,-MMD,"$(*D)/$(DEPDIR)/$(*F).d",-MQ,"$@",-MP -c $(<) -o $*.@OBJEXT@
+
+%.so		: %.cc
+		@$(MKDIR) $(*D)/$(DEPDIR)
+		$(COMPILE) -shared -fPIC -DLOADABLE_STATUS -Wp,-MMD,"$(*D)/$(DEPDIR)/$(*F).d",-MQ,"$@",-MP $(<) -o $*.so
 
 %.cc		: %.l
 		@LEX@ -ifs8 -orclex.cc rclex.l
@@ -40,7 +44,7 @@ keywords.h	: rcgr.hh
 		sed -ne '/^# define\t\([A-Z][A-Za-z]*\)\t\([0-9][0-9]*\).*/{s//\1=\2,/ p}' rcgr.hh >keywords.h
 
 $(DAEMOND_EXE):	$(DAEMOND_OBJ)
-		$(LINK) -g -o $(DAEMOND_EXE) $^ @LIBS@
+		$(LINK) -rdynamic -g -o $(DAEMOND_EXE) $^ @LIBS@ -ldl
 
 install:
 		@echo "* No install target is provided for safety reasons."
