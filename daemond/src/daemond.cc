@@ -118,7 +118,7 @@ void DaemonState::run(void)
     static char	cbuf[128];
     static int	clen = 0;
 
-    load_status_object("vc");
+    load_status_object(daemond.visual);
 
     for(;;) // fresh config
       {

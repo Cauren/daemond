@@ -20,6 +20,7 @@ static struct option	opts[] = {
       { "check-config", 0, 0, 'c' },
       { "send", 0, 0, 's' },
       { "quiet", 0, 0, 'q' },
+      { "visual", 1, 0, 'v' },
       { }
 };
 

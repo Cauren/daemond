@@ -53,6 +53,7 @@ namespace Daemond {
       {
 	enum Status {
 	    Stopped,
+	    Throttled,	// delay before setup/start
 	    SettingUp,
 	    Starting,
 	    Running,	// this state satisfies a dependency

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <time.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -27,6 +28,8 @@ static void output(const char* fmt, ...)
 static void begin_output(void)
   {
     _OF = fopen("daemond.status~", "w");
+    fprintf(_OF, "    State Service                                  Mode    Since\n"
+	         "--------- ---------------------------------------- ------- -------------------\n");
   }
 
 static void flush_output(void)
@@ -169,31 +172,32 @@ extern "C" bool dyn_status_update(void)
 	switch(ss[si].s->want)
 	  {
 	    case Section::Disabled:
-		output("XXXX ");
+		output("  man OFF ");
 		break;
 	    case Section::Automatic:
-		output("auto ");
+		output(" auto OFF ");
 		break;
 	    case Section::Wanted:
-		output("AUTO ");
+		output("  auto ON ");
 		break;
 	    case Section::Enabled:
-		output("  ON ");
+		output("   man ON ");
 		break;
 	  }
 
 	static const char*	sdisp[] = {
 				"WAITING",
 				"UNAVAIL",
-				"       ",
+				"STOPPED",
+				"THROTTL",
 				"SETUP  ",
 				"START  ",
-				"OK     ",
+				"RUNNING",
 				"STOP   ",
 				"CLEANUP",
 				"DEAD   ",
 				"FAILED ",
-				"FAILED ",
+				"F-SETUP",
 	};
 
 	int	sd = int(ss[si].s->status)+2;
@@ -202,14 +206,19 @@ extern "C" bool dyn_status_update(void)
 	    sd = 0;
 	if(ss[si].unavaliable)
 	    sd = 1;
-	output("%-*.*s %s  ", 23, 23, ss[si].s->name, sdisp[sd]);
-	if(++nc == 2)
-	  {
-	    nc = 0;
-	    output("\n");
-	  }
-	else
-	    output("|  ");
+	output("%-40.40s %s ", ss[si].s->name, sdisp[sd]);
+	if(sd==6) {
+	    char	pad[32];
+	    if(Service* s = dynamic_cast<Service*>(ss[si].s)) {
+		time_t	t = s->last_start[4];
+
+		if(t) {
+		    strftime(pad, 31, "%Y-%m-%d %H:%M:%S", localtime(&t));
+		    output("%s", pad);
+		}
+	    }
+	}
+	output("\n");
       }
     if(nc)
 	output("\n");

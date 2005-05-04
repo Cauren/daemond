@@ -417,14 +417,15 @@ namespace Daemond {
 	    return;
 	  }
 
-	if(last_start[4]+try_interval > now)
-	    return;
 	if(last_start[0]+30 > now)
 	  {
 	    log(LOG_WARNING, "service '%s' starting too often -- suspending 5 minutes", name);
-	    try_interval = 300;
-	    return;
+	    try_interval = 30;
 	  }
+	if(last_start[3]+try_interval > now) {
+	    status = Throttled;
+	    return;
+	}
 
 	last_start[0] = last_start[1];
 	last_start[1] = last_start[2];
@@ -587,6 +588,11 @@ namespace Daemond {
 		    status = Stopped;
 		    return true;
 		  }
+		// fallthru
+	    case Throttled:
+		if(last_start[4]+try_interval > time(0))
+		    break;
+		status = Stopped;
 		// fallthru
 	    case Stopped:
 		if(on() && satisfied())

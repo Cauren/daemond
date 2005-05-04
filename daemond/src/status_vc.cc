@@ -276,6 +276,7 @@ extern "C" bool dyn_status_update(void)
 		"\033[32m"	"WAITING",
 				"UNAVAIL",
 				"       ",
+		"\033[33m"	"*PAUSE*",
 		"\033[32m"	"SETUP  ",
 		"\033[32m"	"START  ",
 		"\033[32m"	"OK     ",
