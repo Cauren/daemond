@@ -314,8 +314,18 @@ change:			    if(Service* s=dynamic_cast<Service*>(Section::find(arg)))
 				if(s->want != w)
 				  {
 				    s->want = w;
-				    do_recalc = true;
 				    strcpy(cmdres, "Ok");
+				    //
+				    // XXX: This should check for s->failed() but a daemon that
+				    //      spins, returning true (0) will wedge in Dead or
+				    //      Throttled state and may need manual reset as well.
+				    //
+				    if(s->status >= Section::Dead
+				    || s->status == Section::Throttled) {
+					strcpy(cmdres, "Ok (forced reset)");
+					s->status = Section::Stopped;
+				    }
+				    do_recalc = true;
 				  }
 				else
 				    strcpy(cmdres, "No change");
