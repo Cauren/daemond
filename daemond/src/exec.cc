@@ -49,7 +49,7 @@ namespace Daemond {
 		else if(*s=='/')
 		    slash = s;
 	      }
-	    if(*s==';' || *s=='\n' || *s=='<' || *s=='>')
+	    if(*s==';' || *s=='\n' || *s=='<' || *s=='>' || *s=='$' || *s=='*')
 		bash = true;
 	    s++;
 	  }
@@ -112,10 +112,8 @@ namespace Daemond {
     void Args::empty(void)
       {
 	if(!bash && path)
-	  {
 	    delete[] path;
-	    path = 0;
-	  }
+	path = 0;
 	argc = 0;
 	bash = false;
 	if(cmd)
