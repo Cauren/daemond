@@ -5,6 +5,17 @@
 #include <time.h>
 #include <dirent.h>
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/prctl.h>
+#include <pwd.h>
+#include <grp.h>
+
+#ifdef HAS_SELINUX
+#include <selinux/selinux.h>
+#endif
+#ifdef HAVE_LIBCAP
+#include <sys/capability.h>
+#endif
 
 #include "log.H"
 
@@ -291,6 +302,54 @@ namespace Daemond {
       {
       }
 
+    pid_t SectionWithSetup::fork_with_context(void)
+      {
+	switch(pid_t pid = fork())
+	  {
+	    case -1:
+		return -1;
+	    case 0:
+		setsid();
+		if(capabilities) {
+#ifdef HAVE_LIBCAP
+		    prctl(PR_SET_KEEPCAPS, 1);
+		    if(cap_t caps = cap_from_text(capabilities))
+			if(cap_set_proc(caps))
+#else
+			    log(LOG_WARNING, "service %s: Capabilities specified but ignored.", name);
+#endif
+		}
+		if(user) {
+		    if(passwd* pw = getpwnam(user)) {
+			initgroups(user, pw->pw_gid);
+			setregid(pw->pw_gid, pw->pw_gid);
+			setreuid(pw->pw_uid, pw->pw_uid);
+			if(pw->pw_dir)
+			    chdir(pw->pw_dir);
+		    } else {
+			log(LOG_ERR, "service %s: Unable to switch to user %s", name, user);
+			_exit(1);
+		    }
+		}
+		if(context) {
+#ifdef HAS_SELINUX
+		    if(is_selinux_enabled()) {
+			if(setexeccon(context)) {
+			    log(LOG_ERR, "service %s: Unable to set context to %s", name, context);
+			    _exit(1);
+			}
+		    } else
+			log(LOG_WARNING, "service %s: Context specified but SE/Linux is not enabled.", name);
+#else
+		    log(LOG_WARNING, "service %s: Context specified but no SE/Linux support compiled in.", name);
+#endif
+		}
+		return 0;
+	    default:
+		return pid;
+	  }
+      }
+
     void SectionWithSetup::setup(void)
       {
 	if(!setup_.directives)
@@ -299,7 +358,7 @@ namespace Daemond {
 	    return;
 	  }
 	status = SettingUp;
-	switch(sc_pid = fork())
+	switch(sc_pid = fork_with_context())
 	  {
 	    case 0:
 		for(Directive* d=setup_.directives; d; d=d->next)
@@ -332,7 +391,7 @@ namespace Daemond {
 	    return;
 	  }
 	status = Cleaning;
-	switch(sc_pid = fork())
+	switch(sc_pid = fork_with_context())
 	  {
 	    case 0:
 		for(Directive* d=cleanup_.directives; d; d=d->next)
@@ -389,6 +448,9 @@ namespace Daemond {
 	start_.daemon = false;
 	start_.once = false;
 	start_.given = false;
+	user = 0;
+	context = 0;
+	capabilities = 0;
 	pid = 0;
 	ls_pid = 0;
 	try_interval = 1;
@@ -434,7 +496,7 @@ namespace Daemond {
 	last_start[4] = now;
 	try_interval++;
 
-	if(start_.once) switch(ls_pid = fork())
+	if(start_.once) switch(ls_pid = fork_with_context())
 	  {
 	    case 0:
 		start_.cmd.execute();
@@ -446,7 +508,7 @@ namespace Daemond {
 		return;
 	  }
 
-	switch(pid = fork())
+	switch(pid = fork_with_context())
 	  {
 	    case 0:
 		start_.cmd.execute();
@@ -468,7 +530,7 @@ namespace Daemond {
 	  }
 
 	status = Stopping;
-	if(stop_.cmd) switch(fork())
+	if(stop_.cmd) switch(fork_with_context())
 	  {
 	    case 0:
 		stop_.cmd.execute();

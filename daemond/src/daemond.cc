@@ -33,7 +33,7 @@ static bool perform(Section::Type t)
 
     for(Directive* d=s->setup_.directives; d; d=d->next)
       {
-	if(int pid=fork())
+	if(int pid=s->fork_with_context())
 	  {
 	    if(pid < 0)
 		return true;

@@ -241,6 +241,39 @@ namespace RcFiles {
 			se->start_.given = true;
 		      }
 		    break;
+		case Keywords::User:
+		    if(su)
+		      {
+			if(su->user)
+			  {
+			    log(LOG_ERR, "service %s has more than one user specified", s->name);
+			    break;
+			  }
+			su->user = strdup(n->string(0));
+		      }
+		    break;
+		case Keywords::Caps:
+		    if(su)
+		      {
+			if(su->capabilities)
+			  {
+			    log(LOG_ERR, "service %s has more than one set of capabilities specified", s->name);
+			    break;
+			  }
+			su->capabilities = strdup(n->string(0));
+		      }
+		    break;
+		case Keywords::Context:
+		    if(su)
+		      {
+			if(su->user)
+			  {
+			    log(LOG_ERR, "service %s has more than one context specified", s->name);
+			    break;
+			  }
+			su->context = strdup(n->string(0));
+		      }
+		    break;
 		case Keywords::Stop:
 		case Keywords::Kill:
 		    if(se)
@@ -263,12 +296,6 @@ namespace RcFiles {
 			se->stop_.given = true;
 		      }
 		    break;
-#if 0
-		case Keywords::Parameter:
-		    if(se)
-			se->add_param(n->string(0), n->node(1));
-		    break;
-#endif
 		default:
 		    break;
 	      }

@@ -31,6 +31,7 @@ void yyerror(const char*);
 %token		PIDFile Kill Require All Any Group
 %token		Default Description Caption If Need
 %token		Boolean Critical RcDir VarDir Mode Cleanup Want Module
+%token		User Context Caps
 
 %type<node>	setup_cmd setup_cmds start_pid start_how
 %type<node>	string number setup_list req_opt global globals
@@ -48,6 +49,9 @@ number		: NUMBER				{ $$ = new Node($1); }
 
 setup_cmd	: Setup string ';'			{ $$ = new Node(1, Setup, $2); }
 		| Cleanup string ';'			{ $$ = new Node(1, Cleanup, $2); }
+		| User string ';'			{ $$ = new Node(1, User, $2); }
+		| Caps string ';'			{ $$ = new Node(1, Caps, $2); }
+		| Context string ';'			{ $$ = new Node(1, Context, $2); }
 		;
 
 setup_cmds	: setup_cmds setup_cmd			{ $$ = $1->cat($2); }

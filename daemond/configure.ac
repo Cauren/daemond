@@ -5,8 +5,9 @@ dnl Bits and pieces shamelessly stolen from Underworld Adventures
 dnl (Thanks, Michael and Willem)
 dnl
 
+AM_INIT_AUTOMAKE
 AC_PREREQ(2.53)
-AC_INIT([Daemond], [0.2], [coren@users.sourceforge.net], [daemond])
+AC_INIT([Daemond], [0.5], [coren@users.sourceforge.net], [daemond])
 AC_CONFIG_SRCDIR([src/exec.H])
 
 CXXCODE="-O -DRELEASE"
@@ -16,6 +17,10 @@ CXXLANG="-frtti -fexceptions"
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
+
+AC_CHECK_LIB([dl], [dlopen])
+AC_CHECK_LIB([cap], [capgetp])
+AC_CHECK_LIB([selinux], [setexeccon])
 
 AC_LANG_CPLUSPLUS
 

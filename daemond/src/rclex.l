@@ -80,6 +80,9 @@ Critical/[^a-z]		{ return Critical; }
 RcDir/[^a-z]		{ return RcDir; }
 VarDir/[^a-z]		{ return VarDir; }
 Mode/[^a-z]		{ return Mode; }
+User/[^a-z]		{ return User; }
+Context/[^a-z]		{ return Context; }
+Capabilities/[^a-z]	{ return Caps; }
 (true|yes|on)/[^a-z]	{ yylval.num=1; return NUMBER; }
 (false|no|off)/[^a-z]	{ yylval.num=0; return NUMBER; }
 [a-z0-9-]+		{ strbegin(); stradd(yytext, yyleng); yylval.str = strend(); return BADTOKEN; }

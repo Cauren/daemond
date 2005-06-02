@@ -152,11 +152,15 @@ namespace Daemond {
 	Directives	setup_;
 	Directives	cleanup_;
 	pid_t		sc_pid;
+	char*		user;
+	char*		context;
+	char*		capabilities;
 
 			SectionWithSetup(Type t, const char* n);
 
 	void		reap_(bool ok);
 
+	pid_t		fork_with_context(void);
 	void		setup(void);
 	void		cleanup(bool fail);
 	bool		reap(pid_t pid, bool ok)	{ if(pid==sc_pid) { reap_(ok); return true; }; return false; };
@@ -172,9 +176,6 @@ namespace Daemond {
 
     struct Service: public SectionWithDependencies, public SectionWithSetup
       {
-#if 0
-	Parameter*	params;
-#endif
 	struct {
 	    int		    kill;
 	    Args	    cmd;
