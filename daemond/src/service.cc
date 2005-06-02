@@ -10,7 +10,7 @@
 #include <pwd.h>
 #include <grp.h>
 
-#ifdef HAS_SELINUX
+#ifdef HAVE_LIBSELINUX
 #include <selinux/selinux.h>
 #endif
 #ifdef HAVE_LIBCAP
@@ -331,7 +331,7 @@ namespace Daemond {
 		    }
 		}
 		if(context) {
-#ifdef HAS_SELINUX
+#ifdef HAVE_LIBSELINUX
 		    if(is_selinux_enabled()) {
 			if(setexeccon(context)) {
 			    log(LOG_ERR, "service %s: Unable to set context to %s", name, context);
