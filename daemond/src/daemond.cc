@@ -63,6 +63,13 @@ static void alarm_sigaction(int, siginfo_t*, void*)
   {
   }
 
+static void usr1_sigaction(int, siginfo_t*, void*)
+  {
+    if(daemond.fd_output >= 0)
+	close(daemond.fd_output);
+    daemond.fd_output = open("daemond.output", O_WRONLY|O_APPEND|O_CREAT|O_TRUNC, 0640);
+  }
+
 static void die_sigaction(int, siginfo_t* si, void*)
   {
     if(daemond.signal_die)
@@ -99,6 +106,9 @@ void DaemonState::run(void)
     sa.sa_sigaction = alarm_sigaction;
     sigaction(SIGALRM, &sa, 0);
 
+    sa.sa_sigaction = usr1_sigaction;
+    sigaction(SIGUSR1, &sa, 0);
+
     sa.sa_sigaction = chld_sigaction;
     sa.sa_flags = SA_NOCLDSTOP | SA_NOMASK | SA_SIGINFO;
     sigaction(SIGCHLD, &sa, 0);
@@ -133,7 +143,7 @@ void DaemonState::run(void)
 	    close(fd_output);
 	fd_output = open("daemond.output", O_WRONLY|O_APPEND|O_CREAT|O_TRUNC, 0640);
 
-	if(unlink("daemond.pipe"), mkfifo("daemond.pipe", 0660))
+	if(mkfifo("daemond.pipe", 0660))
 	    log(LOG_WARNING, "unable to create the command pipe: %m");
 
 	if((fd_pipe = open("daemond.pipe", O_RDONLY|O_NONBLOCK)) < 0)
