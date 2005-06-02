@@ -72,6 +72,7 @@ static void die_sigaction(int, siginfo_t* si, void*)
       }
     log(LOG_WARNING, "Received deadly signal %d... killing processes.", si->si_signo);
     daemond.signal_die = true;
+    daemond.signal_refresh = true;
   }
 
 void DaemonState::run(void)
@@ -163,18 +164,20 @@ newmode:    if(!ms || ms->status==Section::Failed)
 		continue;
 	      }
 
-	    log(LOG_INFO, "entering mode '%s'", mode);
-
 	    for(Section* s=Section::first; s; s=s->next)
 	      {
-		if(s->type == Section::ModeSection)
-		    s->want = Section::Disabled;
 		if(s->status == Section::Failed || s->type==Section::ModeSection)
 		    s->status = Section::Stopped;
+		if(s->type == Section::ModeSection) {
+		    s->want = Section::Disabled;
+		}
 	      }
 
 	    if(!signal_die)
+	      {
+		log(LOG_INFO, "entering mode '%s'", mode);
 		ms->want = Section::Enabled;
+	      }
 
 	    bool	do_recalc = true;
 

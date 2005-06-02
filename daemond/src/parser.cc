@@ -111,6 +111,21 @@ namespace RcFiles {
 		    delete su->cleanup_.directives;
 		    su->cleanup_.directives = 0;
 		  }
+		if(su->user)
+		  {
+		    delete[] su->user;
+		    su->user = 0;
+		  }
+		if(su->context)
+		  {
+		    delete[] su->context;
+		    su->context = 0;
+		  }
+		if(su->capabilities)
+		  {
+		    delete[] su->capabilities;
+		    su->capabilities = 0;
+		  }
 	      }
 	    if(SectionWithDependencies* de = dynamic_cast<SectionWithDependencies*>(s))
 	      {

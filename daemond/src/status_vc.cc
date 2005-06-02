@@ -179,8 +179,10 @@ extern "C" bool dyn_status_update(void)
 
     for(Section* s=Section::first; s; s=s->next)
       {
+	/*
 	if(s->type==Section::ModeSection || s->type==Section::GroupSection || !s->name)
 	    continue;
+	    */
 
 	bool	wai = s->status==Section::Stopped
 		   && s->on()

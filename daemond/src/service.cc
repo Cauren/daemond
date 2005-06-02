@@ -212,8 +212,7 @@ namespace Daemond {
 	    if(s->want==Wanted)
 		s->want = Automatic;
 	for(Section* s=first; s; s=s->next)
-	    if(s->on())
-		s->propagate();
+	    s->propagate();
       }
 
     Module::Module(const char* n):
@@ -684,8 +683,8 @@ namespace Daemond {
       }
 
     Mode::Mode(const char* name):
-	Section(GroupSection, name),
-        SectionWithDependencies(GroupSection, name)
+	Section(ModeSection, name),
+        SectionWithDependencies(ModeSection, name)
       {
       }
 
