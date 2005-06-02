@@ -28,6 +28,7 @@ static void output(const char* fmt, ...)
 static void begin_output(void)
   {
     _OF = fopen("daemond.status~", "w");
+    fprintf(_OF, "Daemond status: pid %d, operating mode %s\n", getpid(), daemond.mode);
     fprintf(_OF, "    State Service                                  Mode    Since\n"
 	         "--------- ---------------------------------------- ------- -------------------\n");
   }
