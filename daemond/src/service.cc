@@ -297,7 +297,10 @@ namespace Daemond {
 
     SectionWithSetup::SectionWithSetup(Type t, const char* n):
 	Section(t, n),
-        sc_pid(0)
+        sc_pid(0),
+	user(0),
+	context(0),
+	capabilities(0)
       {
       }
 
