@@ -1,3 +1,20 @@
+#**This is historic code**
+
+I've imported to Github for historical reasons; I haven't actually worked
+on this since 2003, and while it worked pretty well back then it's both
+completely obsolete and probably broken by now.
+
+You're welcome to fiddle with it.  It could probably be made to work
+pretty well with a bit of effort -- but almost certainly not worth the
+trouble since while it does _okay_ at being an early-2000 init replacement
+it doesn't know any of the more modern idioms like cgroups, capabilities,
+namespaces, or dbus.
+
+It arguably would be a pretty neat init for an embedded system though.
+
+## _Original readme below_
+
+
 Oh boy!  You like the bleeding edge, don't you?  :-)
 
 THIS IS NOT PRODUCTION CODE!  It's nifty, it's fast, it's flexible, and
