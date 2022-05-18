@@ -1,0 +1,56 @@
+
+service "nfsd" {
+    description "NFS server";
+    require "rpc.portmap";
+    need "/etc/exports";
+    require "rpc.rquotad";
+    want "rpc.mountd";
+    want "rpc.lockd";
+
+    setup "/usr/sbin/rpc.nfsd 8";
+    cleanup "/bin/killall nfsd";
+}
+
+service "exportfs" {
+    description "Export NFS file systems";
+    need "/usr/sbin/exportfs";
+
+    setup "/usr/sbin/exportfs -r";
+    cleanup "/usr/sbin/exportfs -au";
+}
+
+service "rpc.rquotad" {
+    description "NFS quota server";
+    need "/usr/sbin/rpc.rquotad";
+    require "rpc.portmap";
+
+    start daemon "/usr/sbin/rpc.rquotad";
+    stop kill;
+}
+
+service "rpc.mountd" {
+    description "NFS mount server";
+    require "rpc.portmap";
+    require "exportfs";
+
+    start "/usr/sbin/rpc.mountd -F";
+    stop kill;
+}
+
+service "rpc.lockd" {
+    description "NFS locking server";
+    require "rpc.portmap";
+    want "rpc.statd";
+
+    setup "/usr/sbin/rpc.lockd";
+    cleanup "/bin/killall lockd";
+}
+
+service "rpc.statd" {
+    description "NFS status monitor";
+    require "rpc.portmap";
+
+    start "/usr/sbin/rpc.statd -F";
+    stop kill;
+}
+

@@ -1,0 +1,8 @@
+
+service "isapnp" {
+    description "Setup up ISA Plug-and-Play devices";
+    require "boot-minimum";
+    need "/etc/isapnp.conf";
+    setup "/sbin/isapnp /etc/isapnp.conf";
+}
+

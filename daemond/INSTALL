@@ -1,0 +1,35 @@
+You can build with the usual:
+
+	./configure
+	make
+
+There is no install target in the makefiles.  Replacing your /sbin/init by an
+automated process would be a very, very bad idea since you could hose your
+bootstrap and leave your system in an unusable state.
+
+A sensible first step is to move daemond into /sbin (or some other directory
+on the root filesystem) under a name *other* than init, and boot by specifying
+that file as your init program.  Linux supports this with the 'init=' kernel
+parameter; check your kernel loader documentation for details on how you can
+pass parameters to the booting kernel.
+
+For instance, with LILO, it is usually sufficient to add parameters after
+your image name, e.g:
+
+LILO linux-image init=/sbin/daemond
+
+Would attempt to run /sbin/daemond rather than the default /sbin/init. This
+way, if something breaks, you can simply leave out the parameter and boot
+using the default init.
+
+If things work reasonably well for you this way, you can then consider
+making daemond the default init by either configuring your loader to always
+specify the init= kernel parameter or renaming daemond to /sbin/init (but
+if you do this you should really make a copy of the old init under a
+different name so you can revert to it if the need arises).
+
+Daemond reads its configuration from /etc/daemond.rc, but the service
+definition files can be placed anywhere (usually /etc/daemond.d) according
+to the setting of 'rcdir' in /etc/daemond.rc.  Check the files in the
+doc directory for details on configuring daemond.
+

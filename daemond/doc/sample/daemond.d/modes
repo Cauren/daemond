@@ -1,0 +1,50 @@
+
+mode "single" {
+    require "boot-minimum";
+    want "getty-1";
+}
+
+mode "nonet" {
+    require "boot-clean";
+
+    want "getty-1";
+    want "getty-2";
+    want "getty-3";
+}
+
+mode "clean" {
+    require "boot-clean";
+    want "network";
+
+    want "getty-1";
+    want "getty-2";
+    want "getty-3";
+}
+
+mode "multiuser" {
+    require "boot-clean";
+    want "boot-all";
+    want "network";
+    want "mount-network";
+
+    want "getty-1";
+    want "getty-2";
+    want "getty-3";
+    want "getty-4";
+    want "getty-5";
+    want "getty-6";
+}
+
+mode "graphical" {
+    require "boot-clean";
+    require "network";
+    want "mount-network";
+    want "boot-all";
+
+    want "getty-1";
+    want "getty-2";
+    want "getty-3";
+
+    want "X11";
+}
+

@@ -1,0 +1,22 @@
+
+
+service "file-sanity" {
+    description "Basic filesystem sanity";
+    group "_boot-clean";
+
+    require "boot-minimum";
+
+    setup "rm -rf /var/lock/* /var/spool/uucp/LCK..* /tmp/.X*lock /tmp/core /core";
+    setup "/bin/chmod 755 /";
+    setup "/bin/chmod 1777 /tmp /var/tmp";
+}
+
+service "ldconfig" {
+    description "Update shared library links";
+    group "_boot-clean";
+
+    require "boot-minimum";
+
+    setup "/sbin/ldconfig";
+}
+

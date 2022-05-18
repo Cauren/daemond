@@ -1,0 +1,37 @@
+
+service "getty-1" {
+    description "Login on virtual console 1";
+    require "boot-minimum";
+    start "/sbin/agetty 38400 vc/1 linux";
+}
+
+service "getty-2" {
+    description "Login on virtual console 2";
+    require "boot-minimum";
+    start "/sbin/agetty 38400 vc/2 linux";
+}
+
+service "getty-3" {
+    description "Login on virtual console 3";
+    require "boot-minimum";
+    start "/sbin/agetty 38400 vc/3 linux";
+}
+
+service "getty-4" {
+    description "Login on virtual console 4";
+    require "boot-minimum";
+    start "/sbin/agetty 38400 vc/4 linux";
+}
+
+service "getty-5" {
+    description "Login on virtual console 5";
+    require "boot-minimum";
+    start "/sbin/agetty 38400 vc/5 linux";
+}
+
+service "getty-6" {
+    description "Login on virtual console 6";
+    require "boot-minimum";
+    start "/sbin/agetty 38400 vc/6 linux";
+}
+

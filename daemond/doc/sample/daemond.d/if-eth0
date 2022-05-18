@@ -1,0 +1,9 @@
+
+service "if-eth0" {
+    description "Network interface eth0 (ethernet)";
+    group "network-interfaces";
+
+    setup "/sbin/dhcpcd -t 10 -d eth0";
+    cleanup "/sbin/dhcpcd -k eth0";
+}
+

@@ -1,0 +1,7 @@
+
+service "hwclock" {
+    description "Loading and saving system clock";
+    setup "/sbin/hwclock --localtime --hctosys";
+    cleanup "/sbin/hwclock --localtime --systohc";
+}
+

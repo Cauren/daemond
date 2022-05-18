@@ -1,0 +1,9 @@
+
+service "if-lo" {
+    description "Network interface lo (loopback)";
+
+    setup "/sbin/ifconfig lo 127.0.0.1";
+    setup "/sbin/route add -net 127.0.0.0 netmask 255.0.0.0 lo";
+    cleanup "/sbin/ifconfig lo down";
+}
+

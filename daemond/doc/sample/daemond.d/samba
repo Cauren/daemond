@@ -1,0 +1,22 @@
+
+service "nmbd" {
+    description "NetBIOS name server";
+    need "network";
+    need "/usr/sbin/nmbd";
+    need "/etc/samba/smb.conf";
+    start daemon "/usr/sbin/nmbd -D"
+	pidfile "/var/run/samba/nmbd.pid";
+    stop kill;
+}
+
+service "smbd" {
+    description "SMB file server";
+    need "network";
+    need "/usr/sbin/smbd";
+    need "/etc/samba/smb.conf";
+    want "nmbd";
+    start daemon "/usr/sbin/smbd -D"
+	pidfile "/var/run/samba/smbd.pif";
+    stop kill;
+}
+

@@ -1,0 +1,41 @@
+
+
+service "X11" {
+    description "X11 session";
+    require "boot-clean";
+    need module "nvidia";
+    
+    require any "_x_display_manager";
+}
+
+
+service "x11-gdm" {
+    description "Gnome display manager";
+    group "_x_display_manager";
+
+    need "/usr/bin/gdm";
+
+    start "/usr/bin/gdm -nodaemon";
+    stop kill;
+}
+
+service "x11-kdm" {
+    description "KDE display manager";
+    group "_x_display_manager";
+
+    need "/opt/kde/bin/kdm";
+
+    start "/opt/kde/bin/kdm -nodaemon";
+    stop kill;
+}
+
+service "x11-xdm" {
+    description "X11 display manager";
+    group "_x_display_manager";
+
+    need "/usr/X11R6/bin/xdmx";
+
+    start "/usr/X11R6/bin/xdm -nodaemon";
+    stop kill;
+}
+

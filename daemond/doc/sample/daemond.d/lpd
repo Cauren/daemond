@@ -1,0 +1,16 @@
+
+
+service "lpd" {
+    description "Line printer daemon";
+    group "_boot-clean";
+
+    need "/usr/sbin/lpd";
+    need "/etc/printcap";
+
+    require "boot-minimum";
+
+    start "/usr/sbin/lpd -F";
+    stop kill;
+}
+
+

@@ -1,0 +1,35 @@
+rcdir "/etc/daemond.d";
+vardir "/var/run";
+default mode "clean";
+
+# SysInit must contain only setup directives, and is executed
+# as the very first action.  It must ensure that (a) /proc
+# is mounted, and (b) /dev is populated [possibly starting
+# devfsd as needed].  Make it fast, this is before any message
+# is output by daemond
+
+SysInit {
+    # start devfsd if devfs is mounted
+    setup "
+	if [ -r /dev/.devfsd ]; then
+	    if [ -x /sbin/devfsd ]; then
+		/sbin/devfsd /dev
+	    fi
+	fi";
+
+    # mount /proc
+    setup "/bin/mount -n /proc";
+}
+
+# Startup also must contain only setup directives, and are executed
+# after the SysInit are completed.  The root filesystem must be read-write
+# after those.
+
+Startup {
+    setup "/sbin/swapon -a";
+    setup "/etc/scripts/fsck.root";
+    setup "/sbin/mount -n -oremount,rw /";
+    setup "rm -f /etc/mtab*";
+    setup "/sbin/mount -oremount,rw /";
+}
+

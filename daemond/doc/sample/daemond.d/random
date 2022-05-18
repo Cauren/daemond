@@ -1,0 +1,10 @@
+
+service "randomseed" {
+    description "Seed the random number generator";
+    require "boot-minimum";
+    need "/etc/random-seed";
+    setup "cat /etc/random-seed >/dev/urandom";
+    setup "dd if=/dev/urandom of=/etc/random-seed count=1 bs=512";
+    cleanup "dd if=/dev/urandom of=/etc/random-seed count=1 bs=512";
+}
+
